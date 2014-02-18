@@ -1,0 +1,155 @@
+#include "all.h"
+
+#include "sqllib.h"
+
+
+
+
+
+EXEC SQL INCLUDE SQLCA;
+EXEC SQL INCLUDE ORACA;
+
+
+EXEC SQL BEGIN DECLARE SECTION;
+#include "sqlstruct.h"
+EXEC SQL END DECLARE SECTION;
+
+
+
+int connect_db(char *ps_name, char *ps_pw)
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+	char s_name[10];
+	char s_pw[10];
+	EXEC SQL END DECLARE SECTION;
+	
+	memset(s_name, 0, sizeof(s_name));
+	memset(s_pw, 0, sizeof(s_pw));
+	strcpy(s_name, ps_name);
+	strcpy(s_pw, ps_pw);
+	
+	EXEC SQL CONNECT :s_name IDENTIFIED BY :s_pw;
+	if( sqlca.sqlcode != 0 ) {
+		LOG(FL,"sd", "connect error", sqlca.sqlcode);
+		return -1;
+	}
+	
+	return 0;
+}
+
+int disconnect_db(int status)
+{
+	switch(status) {
+	case 0:
+		EXEC SQL COMMIT WORK RELEASE;
+		break;
+	case 1:
+	default:
+		EXEC SQL ROLLBACK WORK RELEASE;
+		break;
+	}
+	if(sqlca.sqlcode != 0) {
+		LOG(FL,"sd", "disconnect error", sqlca.sqlcode);
+		return -1;
+	}
+	return 0;
+}
+
+int getyester_fromdb(char *pdate)
+{
+        EXEC SQL BEGIN DECLARE SECTION;
+        char dbdate[9];
+        EXEC SQL END DECLARE SECTION;
+
+        memset(dbdate, 0, sizeof(dbdate));
+
+        EXEC SQL select to_char(sysdate-1, 'yyyymmdd') into :dbdate
+                from dual;
+        if(sqlca.sqlcode!= 0) {
+                LOG(FL, "取前一天时间失败%d", sqlca.sqlcode);
+                return -1;
+        }
+        memcpy(pdate, dbdate, 8);
+        return 0;
+}
+
+int db_insert_bankbilltrade(struct ST_BANKBILL *pst_trade)
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+	struct ST_BANKBILL st_trade;
+	EXEC SQL END DECLARE SECTION;
+
+	
+	memset(&st_trade, 0, sizeof(st_trade));
+	memcpy(&st_trade, pst_trade, sizeof(st_trade));
+	
+
+	/*EXEC SQL insert into bank_bill_trade_list
+		(mer_code,term_id,mer_type,trade_dt,
+		 msg_type,process_code,out_cdno,trade_amt,
+		 mer_fee,sysreqno,sys_stance,term_stance,
+		 bit_25,bit_38,ret_code,stlm_date,
+		 org_stance,org_dtime,filename,
+		 bill_fg, create_date) values 
+		(:st_trade.s_mer_code,:st_trade.s_term_id,
+		 :st_trade.s_mer_type,:st_trade.s_trade_dt,
+		 :st_trade.s_msg_type,:st_trade.s_process_code,
+		 :st_trade.s_out_cdno,:st_trade.i_trade_amt,
+		 :st_trade.i_mer_fee,:st_trade.s_sysreqno,
+		 :st_trade.s_sys_stance,:st_trade.s_term_stance,
+		 :st_trade.s_bit_25,:st_trade.s_bit_38,
+		 :st_trade.s_ret_code,:st_trade.s_stlm_date,
+		 :st_trade.s_org_stance,:st_trade.s_org_dtime,
+		 :st_trade.s_filename,:st_trade.c_bill_fg,
+		 :st_trade.s_create_date);
+     EXEC SQL insert into bank_bill_trade_list
+		values 
+		(:st_trade.s_mer_code,:st_trade.s_term_id,
+		 :st_trade.s_mer_type,:st_trade.s_trade_dt,
+		 :st_trade.s_msg_type,:st_trade.s_process_code,
+		 :st_trade.s_out_cdno,:st_trade.i_trade_amt,
+		 :st_trade.i_mer_fee,:st_trade.s_sysreqno,
+		 :st_trade.s_sys_stance,:st_trade.s_term_stance,
+		 :st_trade.s_bit_25,:st_trade.s_bit_38,
+		 :st_trade.s_ret_code,:st_trade.s_stlm_date,
+		 :st_trade.s_org_stance,:st_trade.s_org_dtime,
+		 :st_trade.s_filename,:st_trade.c_bill_fg,
+		 :st_trade.s_create_date);
+
+	if(sqlca.sqlcode != 0) {
+		LOG(FL,"sd",
+			    "insert error,",
+			    sqlca.sqlcode);
+		return -1;
+	} */
+	
+	return 0;
+}
+
+
+int exec_sqlstr(char *pstr)
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+	char ssqlstra[LINE_LENGTH*2];
+	EXEC SQL END DECLARE SECTION;
+
+	ZERO(ssqlstra);
+	strcpy(ssqlstra, pstr);
+
+	EXEC SQL PREPARE p_sqlstring from :ssqlstra;
+	if(sqlca.sqlcode != 0) {
+		LOG(FL,"sd",
+			    "insert error,",
+			    sqlca.sqlcode);
+		return -1;
+	}
+	EXEC SQL EXECUTE  p_sqlstring;
+	if(sqlca.sqlcode != 0) {
+		LOG(FL,"sd",
+			    "insert error,",
+			    sqlca.sqlcode);
+		return -1;
+	}
+
+	return 0;
+}

@@ -1,0 +1,23 @@
+
+PRO_PATH = $(HOME)/reconsys
+BIN_PATH = $(PRO_PATH)/bin
+RUNLIB_PATH = $(PRO_PATH)/lib
+SRC_PATH = $(PRO_PATH)/src
+
+INC_PATH = $(SRC_PATH)/inc
+LIB_PATH = $(SRC_PATH)/lib
+
+OBJSOB = libbasic.a
+OBJSODB = libdb.a
+
+CFLAG = -Wall -g -I$(INC_PATH)
+CSOFLAG = -g -fPIC -shared
+LDFLAG = -L$(RUNLIB_PATH) -lbasic -ldb
+
+#CC = g++
+#CC = gcc --std=c99 -Wall -Wextra -Werror -D_SVID_SOURCE
+CC = gcc --std=c99 -Wall -Wextra -D_SVID_SOURCE
+#PROC = proc config=$(SRC_PATH)/pcscfg.cfg
+#PROC = proc include=$(INC_PATH) mode=oracle unsafe_null=yes dbms=v8
+PROC = proc include=$(INC_PATH) lines=yes mode=oracle unsafe_null=yes dbms=v8
+
